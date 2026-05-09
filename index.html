@@ -663,7 +663,13 @@ window.addEventListener('load', () => {
     </div>
     <div class="artist-player">
       <h3>Top Tracks</h3>
-      <iframe class="spotify-embed" id="spotifyEmbed" src="" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+      <div id="trackNav" style="display:none;margin-bottom:0.8rem;display:flex;gap:0.5rem;align-items:center">
+        <button class="action-btn action-btn-secondary" style="padding:0.4rem 0.8rem" onclick="prevTrack()">← Prev</button>
+        <span id="trackNavLabel" style="font-size:0.75rem;color:var(--muted);flex:1;text-align:center"></span>
+        <button class="action-btn action-btn-secondary" style="padding:0.4rem 0.8rem" onclick="nextTrack()">Next →</button>
+      </div>
+      <iframe class="spotify-embed" id="spotifyEmbed" src="" height="152" frameborder="0" allowtransparency="true" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+      <div id="trackList" style="margin-top:0.8rem"></div>
     </div>
   </div>
 </div>
