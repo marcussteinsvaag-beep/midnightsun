@@ -664,11 +664,11 @@ async function openArtistPage(artistName, spotifyImg) {
       if (artist.genres?.length) document.getElementById('artistPageGenre').textContent = artist.genres.slice(0,3).join(' · ');
       document.getElementById('artistSpotifyLink').href = artist.external_urls?.spotify || '#';
       if (!spotifyImg && artist.images?.[0]?.url) bg.style.backgroundImage = `url('${artist.images[0].url}')`;
-      const tracksR = await fetch(`https://api.spotify.com/v1/artists/${artist.id}/top-tracks?market=NO`, {
+      const tracksR = await fetch(`https://api.spotify.com/v1/search?q=artist:${encodeURIComponent(artistName)}&type=track&limit=5&market=NO`, {
         headers: { 'Authorization': 'Bearer ' + token }
       });
       const tracksD = await tracksR.json();
-      const trackIds = tracksD.tracks?.slice(0,5).map(t => t.id) || [];
+      const trackIds = tracksD.tracks?.items?.map(t => t.id) || [];
       if (trackIds.length) {
         document.getElementById('spotifyEmbed').src = `https://open.spotify.com/embed/track/${trackIds[0]}?utm_source=generator&theme=0`;
         document.getElementById('spotifyEmbed').dataset.tracks = trackIds.join(',');
