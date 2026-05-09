@@ -232,6 +232,9 @@
   .featured-card:hover { border-color: rgba(240,160,75,0.4); }
   .featured-card.large { grid-row: span 2; display: flex; flex-direction: column; justify-content: flex-end; min-height: 360px; background: linear-gradient(160deg, var(--bg3) 0%, var(--bg) 100%); position: relative; overflow: hidden; }
   .featured-card.large::before { content: ''; position: absolute; top: -40%; right: -20%; width: 70%; height: 70%; background: radial-gradient(ellipse, rgba(240,160,75,0.12) 0%, transparent 70%); }
+  .featured-card-img { position: absolute; inset: 0; background-size: cover; background-position: center top; opacity: 0.35; transition: opacity 0.4s; }
+  .featured-card.large:hover .featured-card-img { opacity: 0.45; }
+  .featured-card-content { position: relative; z-index: 1; }
   .featured-artist { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 0.4rem; }
   .featured-card.large .featured-artist { font-size: 2rem; }
   .featured-genre { font-size: 0.72rem; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.8rem; }
@@ -324,31 +327,31 @@
   <div class="section-label">Curated Selection</div>
   <h2>Nordic Artists to Know</h2>
   <div class="featured-grid">
-    <div class="featured-card large">
+    <div class="featured-card large" style="background-image: linear-gradient(to top, var(--bg) 0%, rgba(12,9,6,0.5) 60%, rgba(12,9,6,0.2) 100%), url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Kygo_Ultra_2016.jpg/800px-Kygo_Ultra_2016.jpg'); background-size: cover; background-position: center top;">
       <div class="featured-genre">Electronic · Tropical</div>
       <div class="featured-artist">Kygo</div>
       <p class="featured-desc">The Bergen-born producer who turned Norwegian melancholy into a global tropical house phenomenon. Streams in the billions, yet the fjord is always present.</p>
       <a class="search-link" onclick="searchFor('Kygo')">Discover similar →</a>
     </div>
-    <div class="featured-card">
+    <div class="featured-card" id="card-aurora">
       <div class="featured-genre">Indie Pop</div>
       <div class="featured-artist">Aurora</div>
       <p class="featured-desc">Voice from the Arctic, sound from another world.</p>
       <a class="search-link" onclick="searchFor('Aurora')">Discover similar →</a>
     </div>
-    <div class="featured-card">
+    <div class="featured-card" id="card-walker">
       <div class="featured-genre">Electronic</div>
       <div class="featured-artist">Alan Walker</div>
       <p class="featured-desc">The masked producer redefining Norwegian electronic music.</p>
       <a class="search-link" onclick="searchFor('Alan Walker')">Discover similar →</a>
     </div>
-    <div class="featured-card">
+    <div class="featured-card" id="card-sigrid">
       <div class="featured-genre">Pop</div>
       <div class="featured-artist">Sigrid</div>
       <p class="featured-desc">Ålesund-born pop force with a voice that cuts through the noise.</p>
       <a class="search-link" onclick="searchFor('Sigrid')">Discover similar →</a>
     </div>
-    <div class="featured-card">
+    <div class="featured-card" id="card-matoma">
       <div class="featured-genre">Tropical Bass</div>
       <div class="featured-artist">Matoma</div>
       <p class="featured-desc">From a small Norwegian town to Miami bass — via Tromsø.</p>
@@ -383,6 +386,38 @@
 
 <script>
 const LASTFM = 'https://ws.audioscrobbler.com/2.0/';
+const SPOTIFY_CLIENT_ID = 'bfddb27c6d0b42cea723a19b63df61d8';
+const SPOTIFY_CLIENT_SECRET = '7c7d2f25c3f641b4ad7dd2d4631c7456';
+let spotifyToken = null;
+let spotifyTokenExpiry = 0;
+
+async function getSpotifyToken() {
+  if (spotifyToken && Date.now() < spotifyTokenExpiry) return spotifyToken;
+  const r = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': 'Basic ' + btoa(SPOTIFY_CLIENT_ID + ':' + SPOTIFY_CLIENT_SECRET)
+    },
+    body: 'grant_type=client_credentials'
+  });
+  const d = await r.json();
+  spotifyToken = d.access_token;
+  spotifyTokenExpiry = Date.now() + (d.expires_in - 60) * 1000;
+  return spotifyToken;
+}
+
+async function getSpotifyImage(artistName) {
+  try {
+    const token = await getSpotifyToken();
+    const r = await fetch('https://api.spotify.com/v1/search?q=' + encodeURIComponent(artistName) + '&type=artist&limit=1', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const d = await r.json();
+    const images = d?.artists?.items?.[0]?.images;
+    return images?.[0]?.url || null;
+  } catch(e) { return null; }
+}
 function getApiKey() { return localStorage.getItem('lastfm_api_key') || ''; }
 function saveApiKey() {
   const key = document.getElementById('apiKeyInput').value.trim();
@@ -455,10 +490,10 @@ function renderResults(query, artists) {
     card.target = '_blank';
     card.rel = 'noopener';
     card.style.animationDelay = i * 0.05 + 's';
-    const hasImg = a.image && !a.image.includes('2a96cbd8b46e442fc41c2b86b821562f');
+    const wrapId = `imgwrap-${i}`;
     card.innerHTML = `
-      <div class="artist-img-wrap">
-        ${hasImg ? `<img class="artist-img" src="${a.image}" alt="${a.name}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'artist-img-placeholder\\'>♪</div>'">` : '<div class="artist-img-placeholder">♪</div>'}
+      <div class="artist-img-wrap" id="${wrapId}">
+        <div class="artist-img-placeholder">♪</div>
       </div>
       <div class="artist-info">
         <div class="artist-name">${a.name}</div>
@@ -467,14 +502,61 @@ function renderResults(query, artists) {
       </div>
     `;
     grid.appendChild(card);
+
+    getSpotifyImage(a.name).then(img => {
+      const wrap = document.getElementById(wrapId);
+      if (img && wrap) wrap.innerHTML = `<img class="artist-img" src="${img}" alt="${a.name}" loading="lazy">`;
+    });
   });
   document.getElementById('results').style.display = 'block';
   document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
 }
 
 document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') search(); });
+
+// Load Wikipedia images for featured artists
+const wikiArtists = [
+  { id: 'img-Kygo', wiki: 'Kygo' },
+  { id: 'img-Aurora', wiki: 'Aurora_(singer)' },
+  { id: 'img-AlanWalker', wiki: 'Alan_Walker_(DJ)' },
+  { id: 'img-Sigrid', wiki: 'Sigrid_(singer)' },
+  { id: 'img-Matoma', wiki: 'Matoma' },
+];
+
+async function loadWikiImage(id, wiki) {
+  try {
+    const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${wiki}`, {
+      headers: { 'User-Agent': 'midnightsun.fm/1.0' }
+    });
+    const d = await r.json();
+    const img = d?.originalimage?.source || d?.thumbnail?.source;
+    if (img) {
+      const el = document.getElementById(id);
+      if (el) el.style.backgroundImage = `url('${img}')`;
+    }
+  } catch(e) {}
+}
+
+wikiArtists.forEach(a => loadWikiImage(a.id, a.wiki));
 window.addEventListener('load', () => {
   if (getApiKey()) { document.getElementById('apiStatus').innerHTML = '✓ API key ready. Start searching!'; document.getElementById('apiNotice').style.color = 'var(--accent)'; }
+
+  // Load Spotify images for featured cards
+  const featured = [
+    { id: 'card-aurora', name: 'Aurora' },
+    { id: 'card-walker', name: 'Alan Walker' },
+    { id: 'card-sigrid', name: 'Sigrid' },
+    { id: 'card-matoma', name: 'Matoma' },
+  ];
+  featured.forEach(async ({id, name}) => {
+    const img = await getSpotifyImage(name);
+    const el = document.getElementById(id);
+    if (img && el) {
+      el.style.backgroundImage = `linear-gradient(to top, var(--bg) 0%, rgba(12,9,6,0.4) 60%, rgba(12,9,6,0.15) 100%), url('${img}')`;
+      el.style.backgroundSize = 'cover';
+      el.style.backgroundPosition = 'center top';
+    }
+  });
 });
 </script>
 </body>
