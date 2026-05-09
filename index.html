@@ -636,6 +636,99 @@ window.addEventListener('load', () => {
     }
   });
 });
+
+// ── Artist Page ──────────────────────────────────────────────────────────────
+async function openArtistPage(artistName, spotifyImg) {
+  const page = document.getElementById('artistPage');
+  page.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  page.scrollTop = 0;
+
+  document.getElementById('artistPageName').textContent = artistName;
+  document.getElementById('artistPageGenre').textContent = '';
+  document.getElementById('artistBioText').innerHTML = '<p class="artist-bio-loading">Loading biography…</p>';
+  document.getElementById('spotifyEmbed').src = '';
+  document.getElementById('trackNav').style.display = 'none';
+
+  const bg = document.getElementById('artistHeroBg');
+  bg.style.backgroundImage = spotifyImg ? `url('${spotifyImg}')` : '';
+
+  try {
+    const token = await getSpotifyToken();
+    const r = await fetch('https://api.spotify.com/v1/search?q=' + encodeURIComponent(artistName) + '&type=artist&limit=1', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const d = await r.json();
+    const artist = d?.artists?.items?.[0];
+    if (artist) {
+      if (artist.genres?.length) document.getElementById('artistPageGenre').textContent = artist.genres.slice(0,3).join(' · ');
+      document.getElementById('artistSpotifyLink').href = artist.external_urls?.spotify || '#';
+      if (!spotifyImg && artist.images?.[0]?.url) bg.style.backgroundImage = `url('${artist.images[0].url}')`;
+      const tracksR = await fetch(`https://api.spotify.com/v1/artists/${artist.id}/top-tracks?market=NO`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const tracksD = await tracksR.json();
+      const trackIds = tracksD.tracks?.slice(0,5).map(t => t.id) || [];
+      if (trackIds.length) {
+        document.getElementById('spotifyEmbed').src = `https://open.spotify.com/embed/track/${trackIds[0]}?utm_source=generator&theme=0`;
+        document.getElementById('spotifyEmbed').dataset.tracks = trackIds.join(',');
+        document.getElementById('spotifyEmbed').dataset.current = '0';
+        updateTrackNav(0, trackIds.length);
+      }
+    }
+  } catch(e) { console.error('Spotify error:', e); }
+
+  loadWikiBio(artistName);
+  document.getElementById('artistDiscoverBtn').onclick = () => {
+    closeArtistPage();
+    document.getElementById('searchInput').value = artistName;
+    search();
+  };
+}
+
+async function loadWikiBio(name) {
+  const searches = [name, name+'_(singer)', name+'_(musician)', name+'_(DJ)', name+'_(band)'];
+  for (const term of searches) {
+    try {
+      const r = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(term));
+      if (!r.ok) continue;
+      const d = await r.json();
+      if (d.extract && d.extract.length > 100) {
+        const paras = d.extract.split('\n').filter(p => p.trim().length > 0);
+        document.getElementById('artistBioText').innerHTML = paras.map(p => `<p>${p}</p>`).join('');
+        return;
+      }
+    } catch(e) {}
+  }
+  document.getElementById('artistBioText').innerHTML = '<p class="artist-bio-loading">No biography available.</p>';
+}
+
+function nextTrack() {
+  const embed = document.getElementById('spotifyEmbed');
+  const tracks = embed.dataset.tracks?.split(',') || [];
+  let i = (parseInt(embed.dataset.current||'0') + 1) % tracks.length;
+  embed.dataset.current = i;
+  embed.src = `https://open.spotify.com/embed/track/${tracks[i]}?utm_source=generator&theme=0`;
+  updateTrackNav(i, tracks.length);
+}
+function prevTrack() {
+  const embed = document.getElementById('spotifyEmbed');
+  const tracks = embed.dataset.tracks?.split(',') || [];
+  let i = (parseInt(embed.dataset.current||'0') - 1 + tracks.length) % tracks.length;
+  embed.dataset.current = i;
+  embed.src = `https://open.spotify.com/embed/track/${tracks[i]}?utm_source=generator&theme=0`;
+  updateTrackNav(i, tracks.length);
+}
+function updateTrackNav(current, total) {
+  document.getElementById('trackNavLabel').textContent = `Track ${current+1} of ${total}`;
+  document.getElementById('trackNav').style.display = 'flex';
+}
+function closeArtistPage() {
+  document.getElementById('artistPage').style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeArtistPage(); });
+
 </script>
 
 <!-- Artist Page -->
