@@ -270,6 +270,80 @@
     .featured-card.large { min-height: 220px; }
     .artists-grid { grid-template-columns: repeat(2, 1fr); }
   }
+
+  /* ── Artist Page ── */
+  .artist-page {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 200;
+    overflow-y: auto;
+    animation: slideIn 0.35s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .artist-page-header {
+    position: sticky; top: 0;
+    background: rgba(12,9,6,0.95);
+    backdrop-filter: blur(12px);
+    padding: 1.2rem 4rem;
+    display: flex; align-items: center; gap: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+  }
+  .back-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0.5rem 1rem; cursor: pointer; transition: border-color 0.2s, color 0.2s;
+  }
+  .back-btn:hover { border-color: var(--accent); color: var(--text); }
+  .artist-page-logo {
+    font-family: 'Playfair Display', serif; font-size: 1rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); text-decoration: none;
+  }
+  .artist-page-logo span { color: var(--accent); }
+  .artist-hero {
+    height: 55vh; min-height: 380px;
+    position: relative; display: flex; align-items: flex-end; overflow: hidden;
+  }
+  .artist-hero-bg {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center top;
+    transition: transform 0.6s ease;
+  }
+  .artist-hero:hover .artist-hero-bg { transform: scale(1.03); }
+  .artist-hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, var(--bg) 0%, rgba(12,9,6,0.3) 60%, transparent 100%);
+  }
+  .artist-hero-content { position: relative; z-index: 1; padding: 3rem 4rem; }
+  .artist-page-name {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3rem, 8vw, 6rem); font-weight: 700; line-height: 1; margin-bottom: 0.5rem;
+  }
+  .artist-page-genre { font-size: 0.75rem; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase; }
+  .artist-body {
+    max-width: 1100px; margin: 0 auto; padding: 4rem;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 5rem;
+  }
+  .artist-bio h3, .artist-player h3 { font-family: 'Playfair Display', serif; font-size: 1.4rem; margin-bottom: 1.2rem; }
+  .artist-bio p { color: var(--muted); line-height: 1.85; font-size: 0.92rem; margin-bottom: 1rem; }
+  .artist-bio-loading { color: var(--muted); font-size: 0.9rem; font-style: italic; }
+  .spotify-embed { width: 100%; border: none; }
+  .artist-actions { margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+  .action-btn {
+    font-family: 'DM Sans', sans-serif; font-size: 0.75rem; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 0.7rem 1.4rem; cursor: pointer;
+    text-decoration: none; transition: all 0.2s; display: inline-block;
+  }
+  .action-btn-primary { background: var(--accent); color: var(--bg); border: none; }
+  .action-btn-primary:hover { background: var(--accent2); }
+  .action-btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .action-btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
 </style>
 </head>
 <body>
@@ -331,31 +405,31 @@
       <div class="featured-genre">Electronic · Tropical</div>
       <div class="featured-artist">Kygo</div>
       <p class="featured-desc">The Bergen-born producer who turned Norwegian melancholy into a global tropical house phenomenon. Streams in the billions, yet the fjord is always present.</p>
-      <a class="search-link" onclick="searchFor('Kygo')">Discover similar →</a>
+      <a class="search-link" onclick="event.stopPropagation();searchFor('Kygo')">Discover similar →</a>
     </div>
     <div class="featured-card" id="card-aurora">
       <div class="featured-genre">Indie Pop</div>
       <div class="featured-artist">Aurora</div>
       <p class="featured-desc">Voice from the Arctic, sound from another world.</p>
-      <a class="search-link" onclick="searchFor('Aurora')">Discover similar →</a>
+      <a class="search-link" onclick="event.stopPropagation();searchFor('Aurora')">Discover similar →</a>
     </div>
     <div class="featured-card" id="card-walker">
       <div class="featured-genre">Electronic</div>
       <div class="featured-artist">Alan Walker</div>
       <p class="featured-desc">The masked producer redefining Norwegian electronic music.</p>
-      <a class="search-link" onclick="searchFor('Alan Walker')">Discover similar →</a>
+      <a class="search-link" onclick="event.stopPropagation();searchFor('Alan Walker')">Discover similar →</a>
     </div>
     <div class="featured-card" id="card-sigrid">
       <div class="featured-genre">Pop</div>
       <div class="featured-artist">Sigrid</div>
       <p class="featured-desc">Ålesund-born pop force with a voice that cuts through the noise.</p>
-      <a class="search-link" onclick="searchFor('Sigrid')">Discover similar →</a>
+      <a class="search-link" onclick="event.stopPropagation();searchFor('Sigrid')">Discover similar →</a>
     </div>
     <div class="featured-card" id="card-matoma">
       <div class="featured-genre">Tropical Bass</div>
       <div class="featured-artist">Matoma</div>
       <p class="featured-desc">From a small Norwegian town to Miami bass — via Tromsø.</p>
-      <a class="search-link" onclick="searchFor('Matoma')">Discover similar →</a>
+      <a class="search-link" onclick="event.stopPropagation();searchFor('Matoma')">Discover similar →</a>
     </div>
   </div>
 </section>
@@ -486,10 +560,13 @@ function renderResults(query, artists) {
   artists.forEach((a, i) => {
     const card = document.createElement('a');
     card.className = 'artist-card';
-    card.href = a.url || '#';
-    card.target = '_blank';
-    card.rel = 'noopener';
+    card.href = '#';
     card.style.animationDelay = i * 0.05 + 's';
+    card.addEventListener('click', e => {
+      e.preventDefault();
+      const imgEl = document.querySelector('#imgwrap-' + i + ' img');
+      openArtistPage(a.name, imgEl ? imgEl.src : null);
+    });
     const wrapId = `imgwrap-${i}`;
     card.innerHTML = `
       <div class="artist-img-wrap" id="${wrapId}">
@@ -560,5 +637,36 @@ window.addEventListener('load', () => {
   });
 });
 </script>
+
+<!-- Artist Page -->
+<div class="artist-page" id="artistPage">
+  <div class="artist-page-header">
+    <button class="back-btn" onclick="closeArtistPage()">← Back</button>
+    <a class="artist-page-logo" href="#" onclick="closeArtistPage()">Midnight<span>sun</span><small style="font-family:'DM Sans';font-size:0.6em;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:300">.fm</small></a>
+  </div>
+  <div class="artist-hero">
+    <div class="artist-hero-bg" id="artistHeroBg"></div>
+    <div class="artist-hero-overlay"></div>
+    <div class="artist-hero-content">
+      <div class="artist-page-genre" id="artistPageGenre"></div>
+      <div class="artist-page-name" id="artistPageName"></div>
+    </div>
+  </div>
+  <div class="artist-body">
+    <div class="artist-bio">
+      <h3>About</h3>
+      <div id="artistBioText"><p class="artist-bio-loading">Loading biography…</p></div>
+      <div class="artist-actions">
+        <a class="action-btn action-btn-primary" id="artistSpotifyLink" href="#" target="_blank">Open in Spotify</a>
+        <button class="action-btn action-btn-secondary" id="artistDiscoverBtn">Discover Similar</button>
+      </div>
+    </div>
+    <div class="artist-player">
+      <h3>Top Tracks</h3>
+      <iframe class="spotify-embed" id="spotifyEmbed" src="" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
