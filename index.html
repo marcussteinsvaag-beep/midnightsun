@@ -263,8 +263,9 @@
 
   /* ── Responsive ── */
   @media (max-width: 768px) {
-    header { padding: 1.5rem 1.5rem; }
+    header { padding: 1.5rem 1.5rem; grid-template-columns: 1fr auto; }
     nav { display: none; }
+    header .clock { display: none; }
     .hero-content { padding: 0 1.5rem 4rem; }
     .results, .featured, .about, footer { padding-left: 1.5rem; padding-right: 1.5rem; }
     .about { grid-template-columns: 1fr; gap: 3rem; }
@@ -375,13 +376,7 @@
         <input type="text" id="searchInput" placeholder="Try Kygo, Aurora, Sigrid…" />
         <button class="search-btn" onclick="search()">Discover</button>
       </div>
-      <div class="api-notice" id="apiNotice">
-        <span id="apiStatus">Enter your <a onclick="toggleApiSetup()">Last.fm API key</a> to get started — it's free.</span>
-      </div>
-      <div class="api-setup" id="apiSetup">
-        <input type="text" id="apiKeyInput" placeholder="Paste your Last.fm API key…" />
-        <button onclick="saveApiKey()">Save</button>
-      </div>
+
       <div class="error-msg" id="errorMsg"></div>
     </div>
   </div>
@@ -498,7 +493,7 @@ async function getSpotifyImage(artistName) {
     return images?.[0]?.url || null;
   } catch(e) { return null; }
 }
-function getApiKey() { return localStorage.getItem('lastfm_api_key') || ''; }
+function getApiKey() { return 'e2c4192a907fd6dcd54af2ad1cf9cba4'; }
 function saveApiKey() {
   const key = document.getElementById('apiKeyInput').value.trim();
   if (!key) return;
@@ -524,7 +519,6 @@ async function search() {
   const query = document.getElementById('searchInput').value.trim();
   if (!query) return;
   const apiKey = getApiKey();
-  if (!apiKey) { document.getElementById('apiSetup').style.display = 'flex'; document.getElementById('apiKeyInput').focus(); return; }
   hideError();
   document.getElementById('loading').style.display = 'block';
   document.getElementById('results').style.display = 'none';
@@ -622,7 +616,7 @@ async function loadWikiImage(id, wiki) {
 
 wikiArtists.forEach(a => loadWikiImage(a.id, a.wiki));
 window.addEventListener('load', () => {
-  if (getApiKey()) { document.getElementById('apiStatus').innerHTML = '✓ API key ready. Start searching!'; document.getElementById('apiNotice').style.color = 'var(--accent)'; }
+
 
   // Load Spotify images for featured cards
   const featured = [
